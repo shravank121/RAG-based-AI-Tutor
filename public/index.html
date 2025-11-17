@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RAG AI Tutor · Sound</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b1220;
+      --card: #0f172a;
+      --muted: #94a3b8;
+      --text: #e2e8f0;
+      --brand1: #6366f1;
+      --brand2: #22d3ee;
+      --ring: rgba(99,102,241,.35);
+      --success: #10b981;
+      --danger: #ef4444;
+      --border: #1f2937;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0; background: radial-gradient(1200px 600px at 20% -10%, rgba(34,211,238,.12), transparent 60%),
+      radial-gradient(900px 600px at 80% -10%, rgba(99,102,241,.14), transparent 60%), var(--bg);
+      color: var(--text); font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    }
+    header {
+      position: sticky; top: 0; z-index: 10; backdrop-filter: blur(10px);
+      background: linear-gradient(180deg, rgba(11,18,32,.9), rgba(11,18,32,.65));
+      border-bottom: 1px solid var(--border);
+    }
+    .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 16px 20px; }
+    .brand {
+      display: flex; gap: 12px; align-items: center;
+    }
+    .logo { width: 36px; height: 36px; border-radius: 10px; background:
+      conic-gradient(from 210deg, var(--brand1), var(--brand2));
+      box-shadow: 0 8px 40px rgba(99,102,241,.35), inset 0 0 20px rgba(34,211,238,.3);
+    }
+    .title { font-weight: 700; letter-spacing: .2px; }
+
+    /* Layout: ChatGPT-like centered thread */
+    .page { min-height: calc(100vh - 72px); display: flex; flex-direction: column; }
+    .thread { flex: 1; overflow: auto; }
+    .thread-inner { max-width: 860px; margin: 0 auto; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+    .utility { position: sticky; top: 0; z-index: 5; backdrop-filter: blur(8px); background: linear-gradient(180deg, rgba(15,23,42,.85), rgba(15,23,42,.6)); border: 1px solid var(--border); border-radius: 12px; padding: 12px; }
+    .row { display: flex; gap: 10px; align-items: center; }
+    .row.wrap { flex-wrap: wrap; }
+
+    input[type="text"], input[type="file"], input, button {
+      font-family: inherit; font-size: 14px;
+    }
+    input[type="text"], #q, #topicId {
+      width: 100%; padding: 10px 12px; color: var(--text); background: #0b1220; border: 1px solid var(--border);
+      border-radius: 10px; outline: none; transition: box-shadow .2s ease, border-color .2s ease;
+    }
+    input[type="text"]:focus, #q:focus, #topicId:focus { border-color: var(--brand1); box-shadow: 0 0 0 4px var(--ring); }
+    .btn {
+      padding: 10px 14px; border: 1px solid transparent; border-radius: 10px; cursor: pointer; font-weight: 600; color: #0b1220;
+      background: linear-gradient(135deg, var(--brand1), var(--brand2));
+      box-shadow: 0 8px 24px rgba(34,211,238,.25);
+      transition: transform .08s ease, filter .2s ease, box-shadow .2s ease;
+    }
+    .btn:disabled { filter: grayscale(.5) brightness(.8); cursor: not-allowed; }
+    .btn:hover { transform: translateY(-1px); filter: brightness(1.05); }
+    .ghost { background: transparent; color: var(--text); border: 1px solid var(--border); box-shadow: none; }
+
+    #uploadStatus { margin-top: 10px; color: var(--muted); font-size: 13px; }
+    .meta { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; }
+    .badge { padding: 4px 8px; border-radius: 999px; font-size: 12px; color: #0b1220; background: #a7f3d0; }
+    /* Styled file input */
+    #pdf { background: #0b1220; border: 1px solid var(--border); color: var(--muted); border-radius: 12px; padding: 6px; }
+    #pdf::file-selector-button {
+      margin-right: 10px; border: 0; border-radius: 10px; padding: 8px 12px; cursor: pointer; color: #0b1220;
+      background: linear-gradient(135deg, var(--brand1), var(--brand2)); box-shadow: 0 8px 20px rgba(34,211,238,.25);
+    }
+    #pdf::-ms-browse { /* fallback */ background: var(--brand1); color:#0b1220; border:0; border-radius:10px; padding:8px 12px; }
+    #pdf:hover::file-selector-button { filter: brightness(1.05); }
+    /* Chip for chunk count */
+    .chip { display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 999px; border: 1px solid var(--border); background: #0b1220; color: var(--text); }
+    .chip b { color: #a5b4fc; }
+
+    /* Chat */
+    #chat { display: flex; flex-direction: column; gap: 14px; }
+    .msg { display: grid; grid-template-columns: 40px 1fr; gap: 12px; }
+    .msg .avatar { width: 36px; height: 36px; border-radius: 50%; background: #0b1220; border: 1px solid var(--border); display:flex; align-items:center; justify-content:center; font-weight:700; color:#a5b4fc; }
+    .msg.ai .avatar { background: linear-gradient(180deg, rgba(15,23,42,.9), rgba(15,23,42,.7)); color:#22d3ee; }
+    .bubble { padding: 14px 16px; border-radius: 14px; line-height: 1.5; font-size: 15px; border: 1px solid var(--border); background: #0b1220; }
+    .you .bubble { background: linear-gradient(135deg, rgba(99,102,241,.18), rgba(34,211,238,.14)); }
+    .meta-line { margin-top: 6px; color: var(--muted); font-size: 12px; }
+    .img-holder img { border-radius: 12px; border: 1px solid var(--border); max-width: 420px; width: 100%; margin-top: 10px; }
+
+    /* Composer like ChatGPT */
+    .composer-wrap { position: sticky; bottom: 0; padding: 12px 0; background: linear-gradient(180deg, rgba(11,18,32,0), rgba(11,18,32,.85) 20%, rgba(11,18,32,.95)); }
+    .composer { max-width: 860px; margin: 0 auto; display: grid; grid-template-columns: 1fr auto; gap: 10px; border: 1px solid var(--border); border-radius: 16px; padding: 8px; background: #0b1220; }
+
+    /* Welcome */
+    .welcome { border: 1px solid var(--border); background: linear-gradient(180deg, rgba(15,23,42,.85), rgba(15,23,42,.7)); border-radius: 16px; padding: 18px; }
+    .welcome h2 { margin: 0 0 8px; font-size: 18px; }
+    .welcome p { margin: 0; color: var(--muted); }
+
+    /* Loaders */
+    .loader-row { display:flex; align-items:center; gap:10px; color: var(--muted); font-size: 13px; }
+    .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.15); border-top-color: var(--brand2); border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .thinking { color: var(--muted); font-size: 13px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container brand">
+      <div class="logo"></div>
+      <div>
+        <div class="title">RAG AI Tutor — Sound</div>
+        <div style="font-size:12px;color:var(--muted)">Upload a chapter PDF, ask questions, and see a relevant diagram.</div>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="thread">
+      <div class="thread-inner">
+        <section class="utility">
+          <form id="uploadForm" class="row wrap" onsubmit="return false;">
+            <input type="file" id="pdf" accept="application/pdf" required style="flex:1" />
+            <button type="submit" class="btn">Upload</button>
+          </form>
+          <div id="uploadStatus" style="margin-top:6px"></div>
+          <div id="uploadLoader" class="loader-row" style="display:none;margin-top:6px;">
+            <div class="spinner"></div>
+            <div id="uploadLoaderText">Processing PDF… chunking text and indexing</div>
+          </div>
+        </section>
+
+        <section id="welcome" class="welcome">
+          <h2>What do you want to learn today?</h2>
+        </section>
+        <div id="chat"></div>
+        <div id="thinking" class="loader-row" style="display:none; padding:6px 0 0 52px;">
+          <div class="spinner"></div>
+          <div class="thinking" id="thinkingText">AI is thinking…</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="composer-wrap">
+      <form id="chatForm" class="composer" onsubmit="return false;">
+        <input id="q" placeholder="Ask a question..." />
+        <button id="sendBtn" class="btn" type="submit">Send</button>
+      </form>
+    </div>
+  </main>
+
+<script>
+const chatDiv = document.getElementById('chat');
+const uploadForm = document.getElementById('uploadForm');
+const chatForm = document.getElementById('chatForm');
+const uploadStatus = document.getElementById('uploadStatus');
+let currentTopicId = '';
+const uploadLoader = document.getElementById('uploadLoader');
+const uploadLoaderText = document.getElementById('uploadLoaderText');
+const thinkingEl = document.getElementById('thinking');
+const thinkingText = document.getElementById('thinkingText');
+const sendBtn = document.getElementById('sendBtn');
+const welcome = document.getElementById('welcome');
+function hideWelcome(){ if (welcome) welcome.style.display = 'none'; }
+
+function addMsg(text, cls, extras) {
+  const row = document.createElement('div');
+  row.className = 'msg ' + (cls||'');
+  const avatar = document.createElement('div');
+  avatar.className = 'avatar';
+  avatar.textContent = cls === 'you' ? 'Y' : 'AI';
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  bubble.textContent = text;
+  row.appendChild(avatar);
+  row.appendChild(bubble);
+  // provider name intentionally hidden per requirement
+  if (extras && extras.image) {
+    const holder = document.createElement('div');
+    holder.className = 'img-holder';
+    const img = document.createElement('img');
+    img.src = extras.image.url;
+    img.alt = extras.image.title || 'image';
+    holder.appendChild(img);
+    bubble.appendChild(holder);
+  }
+  chatDiv.appendChild(row);
+  chatDiv.scrollTop = chatDiv.scrollHeight;
+  return { row, bubble };
+}
+
+// Typewriter render line by line
+function typeLines(targetEl, text) {
+  const lines = text.split(/(?<=\.|!|\?)\s+/).filter(Boolean);
+  let i = 0;
+  function next() {
+    if (i >= lines.length) return;
+    const p = document.createElement('div');
+    p.textContent = lines[i++];
+    targetEl.appendChild(p);
+    targetEl.parentElement.scrollTop = targetEl.parentElement.scrollHeight;
+    setTimeout(next, 200); // delay between lines
+  }
+  next();
+}
+
+uploadForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const file = document.getElementById('pdf').files[0];
+  if (!file) return;
+  const fd = new FormData();
+  fd.append('pdf', file);
+  uploadStatus.textContent = 'Uploading...';
+  uploadLoader.style.display = 'flex';
+  const tips = [
+    'Chunking text and building TF-IDF index…',
+    'Scanning local images for topics…',
+    'Stemming tokens for better matches…',
+    'Preparing retrieval pipeline…'
+  ];
+  let tipIdx = 0;
+  const tipTimer = setInterval(() => { uploadLoaderText.textContent = tips[tipIdx++ % tips.length]; }, 900);
+  const res = await fetch('/upload', { method: 'POST', body: fd });
+  const data = await res.json();
+  if (res.ok) {
+    uploadStatus.innerHTML = `Extracted <span class="chip"><b>${data.chunkCount}</b> chunks</span>`;
+    currentTopicId = data.topicId;
+  } else {
+    uploadStatus.textContent = 'Upload failed: ' + (data.error || '');
+  }
+  clearInterval(tipTimer);
+  uploadLoader.style.display = 'none';
+});
+
+chatForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const topicId = currentTopicId;
+  const question = document.getElementById('q').value.trim();
+  if (!topicId) { addMsg('Please upload a PDF first.', 'ai'); return; }
+  if (!question) return;
+  hideWelcome();
+  sendBtn.disabled = true;
+  addMsg(question, 'you');
+  // Show thinking animation with rotating messages
+  const thoughts = [
+    'AI is thinking…',
+    'Reading the chapter…',
+    'Extracting relevant bits…',
+    'Framing a concise answer…'
+  ];
+  let t = 0;
+  thinkingEl.style.display = 'flex';
+  const thinkTimer = setInterval(() => { thinkingText.textContent = thoughts[t++ % thoughts.length]; }, 900);
+  try {
+    const res = await fetch('/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ topicId, question })
+    });
+    const data = await res.json().catch(() => ({ error: 'Invalid JSON from server' }));
+    console.log('[chat] response', data);
+    if (res.ok) {
+      const holder = addMsg('', 'ai', { image: data.image });
+      typeLines(holder.bubble, data.answer || '');
+      // Clear input after successful response
+      document.getElementById('q').value = '';
+    } else {
+      addMsg('Error: ' + (data.error || 'request failed'));
+    }
+  } catch (err) {
+    console.error('[chat] fetch failed', err);
+    addMsg('Network error: ' + (err && err.message ? err.message : err));
+  } finally {
+    sendBtn.disabled = false;
+    clearInterval(thinkTimer);
+    thinkingEl.style.display = 'none';
+  }
+});
+
+// (removed image list UI)
+</script>
+</body>
+</html>
