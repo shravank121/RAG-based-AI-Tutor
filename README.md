@@ -1,4 +1,4 @@
-# RAG-Based AI Tutor (Sound) – Node.js
+# RAG-Based AI Tutor  – Node.js
 
 ## Overview
 An AI Tutor that ingests a chapter PDF and answers questions grounded in the content. Each answer includes one relevant local diagram from the `Sound/` folder. Text answers prefer Gemini; when the LLM is unavailable, it falls back to an extractive answer from retrieved chunks. The UI is with a sticky composer, loading indicators, and line‑by‑line rendering.
