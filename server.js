@@ -9,7 +9,6 @@ import natural from 'natural';
 const { TfIdf, PorterStemmer } = natural;
 import { fileURLToPath } from 'url';
 import OpenAI from 'openai';
-// Using REST for Gemini to avoid v1beta routing issues in some SDK versions
 
 dotenv.config();
 
@@ -104,7 +103,6 @@ function buildTfIdfIndex(chunks) {
   return { vectors, df, N };
 }
 
-// Build simple Natural TfIdf (kept for compatibility if needed)
 function buildTfIdf(docs) {
   const tfidf = new TfIdf();
   docs.forEach(d => tfidf.addDocument(tokenize(d).join(' ')));
